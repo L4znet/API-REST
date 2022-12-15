@@ -16,15 +16,36 @@ app.use((req, res, next) => {
   next();
 });
 
+const winston = require('winston');
+
+const logger = winston.createLogger({
+    format: winston.format.json(),
+    defaultMeta: { file: 'appjs' },
+    transports: [
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'combined.log' }),
+    ],
+});
+
 // ID et pw à cacher dans des variables d'environnement
 const dbID = process.env.DB_ID;
 const dbPW = process.env.DB_PW;
 const DB = 'mongodb+srv://'+dbID+':'+dbPW+'@cluster0.yh4dmiu.mongodb.net/?retryWrites=true&w=majority';
 
 mongoose.connect(DB, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
+    .then(() => {
+        logger.log({
+            level: 'info',
+            date:new Date(),
+            message: "Connected to mongodb",
+        });
+    })
     .catch((err) => {
-        console.log('MongoDB ERROR CONNECT', err)
+        logger.log({
+            level: 'error',
+            date:new Date(),
+            message: "MongoDB ERROR CONNECT " + err,
+        });
     });
 
 app.use(bodyParser.json());
